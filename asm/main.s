@@ -123,6 +123,7 @@ _start:
 .strbuf_to_array:
     mov rax, offset string_buf
     call length_string
+    mov r12, rax
     call create_array                   # create string
     mov r14, rdi
 
@@ -132,13 +133,15 @@ _start:
 
     mov rax, offset substring_buf
     call length_string
+    mov r13, rax
     call create_array                   # create substring
     mov r15, rdi
 
     mov rax, offset substring_buf
     mov rbx, r15
     call copy_string
-
+    push r12
+    push r13
     mov r12, 0
     jmp .do_task
 
@@ -183,6 +186,8 @@ _start:
     mov rax, 32[rsp]
     mov rbx, offset _out_fname
     call copy_string
+    push r12
+    push r13
     lea rax, ReadEndTime[rip]
     call time_now
     mov r12, 1
@@ -192,6 +197,8 @@ _start:
     
 .do_task:
     # check for invalid ascii codes 
+    debug:
+    mov rdx, r12
     lea rax, CalcStartTime[rip]
     call time_now
     mov rax, r14
@@ -207,10 +214,21 @@ _start:
     mov rax, r14
     mov rbx, r15
     call find_string
+    mov rbx, rax
+    pop r13
+    mov rax, r13
+    mov rdi, r15
+    call free_array
+    pop r12
+    mov rax, r12
+    mov rdi, r14
+    call free_array
+    mov rax, rbx
     push rax
+
     lea rax, CalcEndTime[rip]
     call time_now
-    cmp r12, 0
+    cmp rdx, 0
     jg .file_output
     jmp .console_output
 

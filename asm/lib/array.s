@@ -2,6 +2,7 @@
 
     .text
     .global create_array
+    .global free_array
     .global input_array
     .global print_array
     .global print_string_array
@@ -14,20 +15,30 @@ msg_malloc_err:
 create_array:
     push rcx
     push rdx
-    mov rdx, rax
-
-    mov rax, 12                     # 12 - sys_brk - for heap memory allocation
-    xor rdi, rdi
+    mov rsi, rax                    # length to reserve
+    mov rdi, 0                      # from the start
+    mov rdx, 3                      # READ | WRITE
+    mov r10, 33
+    mov r8, -1
+    mov r9, 0
+    mov rax, 9                     # 9 for sys_mmap
     syscall
+
+
 
     cmp rax, 0
     jl .malloc_err                         # if error - exit
-    mov rcx, rdx
-    lea rdi, [rcx + rax * 8]            # new momory addr now stored in rdi
-    mov rax, 12                     # sys_brk
-    syscall
+    mov rdi, rax
     pop rdx
     pop rcx
+    ret
+
+# input: rax - length
+# input: rdi - addr
+free_array:
+    mov rsi, rax
+    mov rax, 11
+    syscall
     ret
 
 
