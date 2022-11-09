@@ -2,7 +2,7 @@
 
     .bss
     .lcomm _char_buffer, 1
-    .equ _str_buffer_size, 32768
+    .equ _str_buffer_size, 4096
     .lcomm _str_buffer, _str_buffer_size
 
 

@@ -2,7 +2,7 @@
 
     .bss
     .lcomm _out_fname, 128
-    .equ _string_limit, 32768
+    .equ _string_limit, 4096
     .lcomm string_buf, _string_limit
     .lcomm substring_buf, _string_limit
     ReadStartTime: .space 16
