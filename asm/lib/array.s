@@ -4,6 +4,7 @@
     .global create_array
     .global input_array
     .global print_array
+    .global print_string_array
 
 msg_malloc_err:
     .string "Memory allocation error!\n"
@@ -22,7 +23,7 @@ create_array:
     cmp rax, 0
     jl .malloc_err                         # if error - exit
     mov rcx, rdx
-    lea rdi, [rcx + rax]            # new momory addr now stored in rdi
+    lea rdi, [rcx + rax * 8]            # new momory addr now stored in rdi
     mov rax, 12                     # sys_brk
     syscall
     pop rdx
@@ -83,3 +84,22 @@ print_array:
     mov rax, 60
     mov rdi, 0
     syscall
+
+# input: rax - length of string
+# input: rdi - addr of string
+print_string_array:
+    push rbx
+    push rcx
+    mov rcx, rax
+    xor rbx, rbx
+    .psa_loop:
+        cmp rbx, rcx
+        jge .psa_loop_ex
+        mov al, byte ptr [rdi + rbx]
+        call print_char
+        inc rbx
+        jmp .psa_loop
+    .psa_loop_ex:
+    pop rcx
+    pop rbx
+    ret

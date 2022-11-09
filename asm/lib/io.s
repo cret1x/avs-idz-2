@@ -19,6 +19,7 @@
     .global file_write_line
     .global file_close
     .global file_create
+    .global file_read_string_line
 
 # output: rax - number
 input_number:
@@ -218,3 +219,34 @@ file_create:
     mov rsi, 436                    # -rw-rw-r--
     syscall
     ret
+
+# input: rax - file desc
+# input: rbx - string array
+file_read_string_line:
+    push r12
+    push r13
+    push r14
+    push rcx
+    push rdx
+    mov r12, rax
+    mov r14, rbx
+    xor r13, r13
+    .rd_ch_lp_2:                          # reading 1 byte and checking if it is eol
+        mov rdi, r12                    # file
+        mov rax, 0                      # read
+        mov rsi, offset _char_buffer    # buffer
+        mov rdx, 1                      # number of bytes to read
+        syscall
+        mov rax, _char_buffer
+        cmp rax, 0xA
+        je .rd_ch_lp_ex_2
+        mov [r14 + r13], rax            # append to save to array
+        inc r13
+        jmp .rd_ch_lp_2
+    .rd_ch_lp_ex_2:
+        pop rdx
+        pop rcx
+        pop r14
+        pop r13
+        pop r12
+        ret
