@@ -231,7 +231,7 @@ file_read_string_line:
     mov r12, rax
     mov r14, rbx
     xor r13, r13
-    .rd_ch_lp_2:                          # reading 1 byte and checking if it is eol
+    .rd_ch_lp_2:                        # reading 1 byte and checking if it is eol
         mov rdi, r12                    # file
         mov rax, 0                      # read
         mov rsi, offset _char_buffer    # buffer

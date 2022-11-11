@@ -150,7 +150,7 @@ find_string:
         .find_string_second_loop:
             cmp rdx, r9
             jge .find_string_loop_success
-            mov al, byte ptr [r10 + rcx]
+            mov al, byte ptr [r10 + rcx]    # second loop to iter over substring
             mov bl, byte ptr [r11 + rdx]
             cmp al, bl
             jne .find_string_second_loop_exit
