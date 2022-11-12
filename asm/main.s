@@ -3,6 +3,7 @@
     .bss
     .lcomm _out_fname, 128
     .equ _string_limit, 4096
+    .equ _string_big_limit, 134217728
     .lcomm string_buf, _string_limit
     .lcomm substring_buf, _string_limit
     ReadStartTime: .space 16
@@ -62,20 +63,20 @@ _start:
     mov rax, rcx
     mov rbx, offset flag_console
     call compare_strings
-    cmp rax, 1                          # if flag -c then goto console input
+    cmp rax, 1
     je .console_input
     mov rax, rcx
     mov rbx, offset flag_random
     call compare_strings
-    cmp rax, 1                          # if flag -r then goto random input
+    cmp rax, 1
     je .random_input
     mov rax, rcx
     mov rbx, offset flag_file
     call compare_strings
-    cmp rax, 1                          # if flag -f then goto file input
+    cmp rax, 1
     je .file_input
     mov rax, offset msg_inv_flag
-    call print_string                   # else print error message
+    call print_string
     jmp exit
 
 .console_input:
@@ -106,17 +107,17 @@ _start:
     call string_to_num
     cmp rax, _string_limit
     jg len_too_big
-    mov rbx, offset substring_buf               # generate random substring given length
+    mov rbx, offset substring_buf                      # generate random substring given length
     call get_random_string
     mov rax, offset msg_gen_str
     call print_string
     mov rax, offset string_buf
-    call print_string                           # print generated string
+    call print_string
     call print_line
     mov rax, offset msg_gen_substr
     call print_string
     mov rax, offset substring_buf
-    call print_string                           # print generated substring
+    call print_string
     call print_line
     jmp .strbuf_to_array
 
@@ -148,47 +149,47 @@ _start:
 .file_input:
     lea rax, ReadStartTime[rip]
     call time_now
-    cmp r12, 4
+    cmp r12, 5
     jne inv_args_count
-    mov rax, 24[rsp]                    # store in rax filename input
-    mov rbx, 0                          # 0 - read
-    call file_open
-    push rax
-    call file_read_line                 # get length of string
-    mov rax, offset _str_buffer
-    call string_to_num
-    mov r12, rax
-    pop rax
-    push rax
-    call file_read_line                 # get length of substring
-    mov rax, offset _str_buffer
-    call string_to_num
-    mov r13, rax
-
-    mov rax, r12
+    mov rax, _string_big_limit
     call create_array                   # create string
     mov r14, rdi
-
-    mov rax, r13
+    mov rax, _string_big_limit
     call create_array                   # create substring
     mov r15, rdi
 
-    pop rax
+    mov rax, 24[rsp]                    # store in rax filename input
+    mov rdx, rax
+    mov rbx, 0                          # 0 - read
+    call file_open
+
+    cmp rax, -1                         # if error
+    jl .file_open_error
+
     push rax
     mov rbx, r14
-    call file_read_string_line          # read string into memory
-    pop rax
-    push rax
-    mov rbx, r15
-    call file_read_string_line          # read substring into memory
+    call file_read_string_line
     pop rax
     call file_close
-    mov rax, 32[rsp]
-    mov rbx, offset _out_fname          # save out file name
+
+    mov rax, 32[rsp]                    # store in rax filename input
+    mov rdx, rax
+    mov rbx, 0                          # 0 - read
+    call file_open
+
+    cmp rax, -1                         # if error
+    jl .file_open_error
+
+    push rax
+    mov rbx, r15
+    call file_read_string_line
+    pop rax
+    call file_close
+    
+    mov rax, 40[rsp]
+    mov rbx, offset _out_fname
     call copy_string
-    push r12
-    push r13
-    lea rax, ReadEndTime[rip]           # save read time
+    lea rax, ReadEndTime[rip]
     call time_now
     mov r12, 1
 
@@ -197,12 +198,13 @@ _start:
     
 .do_task:
     # check for invalid ascii codes 
+    debug:
     mov rdx, r12
     lea rax, CalcStartTime[rip]
     call time_now
     mov rax, r14
     mov rbx, 128
-    call find_chars_by_code             # check for invalid chars 
+    call find_chars_by_code
     cmp rax, 0
     jge .inv_chars
     mov rax, r15
@@ -212,20 +214,18 @@ _start:
     jge .inv_chars
     mov rax, r14
     mov rbx, r15
-    call find_string                    # main function to find substing in a string
-    mov rbx, rax                        # see file "str.s" to view source code
-    pop r13
-    mov rax, r13
+    call find_string
+    mov rbx, rax
+    mov rax, _string_big_limit
     mov rdi, r15
     call free_array
-    pop r12
-    mov rax, r12
+    mov rax, _string_big_limit
     mov rdi, r14
     call free_array
     mov rax, rbx
     push rax
 
-    lea rax, CalcEndTime[rip]           # save execution time
+    lea rax, CalcEndTime[rip]
     call time_now
     cmp rdx, 0
     jg .file_output
@@ -259,7 +259,7 @@ _start:
     call file_write_line
     mov rax, r13
     call file_close
-    lea rax, WriteEndTime[rip]          # save write time
+    lea rax, WriteEndTime[rip]
     call time_now
 
 .print_time:
@@ -324,6 +324,14 @@ _start:
     mov rax, WriteDeltaTime[rip+8]
     call print_number
     call print_line    
+    jmp exit
+
+.file_open_error:
+    mov rax, offset msg_err
+    call print_string
+    mov rax, rdx
+    call print_string
+    call print_line
     jmp exit
 
 len_too_big:

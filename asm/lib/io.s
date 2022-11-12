@@ -231,15 +231,15 @@ file_read_string_line:
     mov r12, rax
     mov r14, rbx
     xor r13, r13
-    .rd_ch_lp_2:                        # reading 1 byte and checking if it is eol
+    .rd_ch_lp_2:                          # reading 1 byte and checking if it is eol
         mov rdi, r12                    # file
         mov rax, 0                      # read
         mov rsi, offset _char_buffer    # buffer
         mov rdx, 1                      # number of bytes to read
         syscall
-        mov rax, _char_buffer
-        cmp rax, 0xA
+        cmp rax, 0x0
         je .rd_ch_lp_ex_2
+        mov rax, _char_buffer
         mov [r14 + r13], rax            # append to save to array
         inc r13
         jmp .rd_ch_lp_2
