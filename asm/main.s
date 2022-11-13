@@ -100,14 +100,14 @@ _start:
     mov rax, 24[rsp]                            # get length of string
     call string_to_num
     cmp rax, _string_limit
-    jg len_too_big
+    jge len_too_big
     mov rbx, offset string_buf
     call get_random_string                      # generate random string given length
     mov rax, 32[rsp]                            # get length of substring
     call string_to_num
     cmp rax, _string_limit
-    jg len_too_big
-    mov rbx, offset substring_buf                      # generate random substring given length
+    jge len_too_big
+    mov rbx, offset substring_buf               # generate random substring given length
     call get_random_string
     mov rax, offset msg_gen_str
     call print_string
@@ -125,7 +125,7 @@ _start:
     mov rax, offset string_buf
     call length_string
     mov r12, rax
-    call create_array                   # create string
+    call create_array                           # create string
     mov r14, rdi
 
     mov rax, offset string_buf
@@ -135,14 +135,12 @@ _start:
     mov rax, offset substring_buf
     call length_string
     mov r13, rax
-    call create_array                   # create substring
+    call create_array                           # create substring
     mov r15, rdi
 
     mov rax, offset substring_buf
     mov rbx, r15
     call copy_string
-    push r12
-    push r13
     mov r12, 0
     jmp .do_task
 
@@ -168,6 +166,7 @@ _start:
 
     push rax
     mov rbx, r14
+    mov rcx, _string_big_limit
     call file_read_string_line
     pop rax
     call file_close
@@ -182,10 +181,11 @@ _start:
 
     push rax
     mov rbx, r15
+    mov rcx, _string_big_limit
     call file_read_string_line
     pop rax
     call file_close
-    
+
     mov rax, 40[rsp]
     mov rbx, offset _out_fname
     call copy_string
@@ -198,7 +198,6 @@ _start:
     
 .do_task:
     # check for invalid ascii codes 
-    debug:
     mov rdx, r12
     lea rax, CalcStartTime[rip]
     call time_now
@@ -208,7 +207,7 @@ _start:
     cmp rax, 0
     jge .inv_chars
     mov rax, r15
-    mov bl, 128
+    mov rbx, 128
     call find_chars_by_code
     cmp rax, 0
     jge .inv_chars

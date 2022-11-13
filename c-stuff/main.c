@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define ulli unsigned long long int 
+#define STR_LIMIT 4096
 
 
 char* read_string_from_file(FILE *f) {
@@ -10,7 +12,7 @@ char* read_string_from_file(FILE *f) {
 	char ch;
 	ulli c = 0;
 	while (c < 134217728 && (ch = fgetc(f)) != EOF) {
-		if (ch > 127) {
+		if (ch > 127 || ch < 0) {
 			return NULL;
 		}
 		ret[c++] = ch;
@@ -18,14 +20,26 @@ char* read_string_from_file(FILE *f) {
 	return ret;
 }
 
+char* get_rand_string(ulli size) {
+	char* ret = (char*) malloc(sizeof(char) * size);
+	char ch;
+	ulli c = 0;
+	while (c < size) {
+		ret[c++] = (char) (rand() % 127);
+	}
+	return ret;
+}
+
 int main(int argc, char const *argv[])
 {
+	srand(time(NULL));
+	clock_t start_read, end_read, start_calc, end_calc, start_write, end_write;
 	if (argc < 2) {
 		printf("Invalid args count\n");
 		return 0;
 	}
 	if (strcmp(argv[1], "-f") == 0) {
-		if (argc < 5) {
+		if (argc != 5) {
 			printf("Invalid args count\n");
 			return 0;
 		}
@@ -36,32 +50,67 @@ int main(int argc, char const *argv[])
 			printf("Error opening the files\n");
 			return 0;
 		}
+		start_read = clock();
 		char* string = read_string_from_file(string_file);
 		char* substring = read_string_from_file(substring_file);
+		end_read = clock() - start_read;
 		if (string == NULL || substring == NULL) {
-			printf("Invalid char over 127!!!\n");
+			printf("Invalid chars in string. Must be in range [0-127].\n");
 				free(string);
 				free(substring);
 				fclose(string_file);
 				fclose(substring_file);
 				return 0;
 		}
+		start_calc = clock();
 		char *fnd = strstr(string, substring);
+		end_calc = clock() - start_calc;
+		start_write = clock();
 		if (fnd) {
 			ulli position = fnd - string;
 			fprintf(out_file, "%llu\n", position);
 		} else {
 			fprintf(out_file, "-1\n");
 		}
+		end_write = clock() - start_write;
 		free(string);
 		free(substring);
 		fclose(string_file);
 		fclose(substring_file);
 		fclose(out_file);
+		double time_read = ((double)end_read)/CLOCKS_PER_SEC;
+		double time_calc = ((double)end_calc)/CLOCKS_PER_SEC;
+		double time_write = ((double)end_write)/CLOCKS_PER_SEC;
+		printf("Elapsed time:\n");
+		printf("Read:\t\t%f\n", time_read);
+		printf("Calculations:\t%f\n", time_calc);
+		printf("Write:\t\t%f\n", time_write);
 
 	} else if (strcmp(argv[1], "-r") == 0) {
-		printf("Random mode\n");
-	} else {
+		if (argc != 4) {
+			printf("Invalid args count\n");
+			return 0;
+		}
+		ulli n1 = atoll(argv[2]);
+		ulli n2 = atoll(argv[3]);
+		if (n1 >= STR_LIMIT || n2 >= STR_LIMIT) {
+			printf("Length is greater than limit!\n");
+			return 0;
+		}
+		char* string = get_rand_string(n1);
+		char* substring = get_rand_string(n2);
+		char *fnd = strstr(string, substring);
+		printf("Generated string: %s\n", string);
+		printf("Generated substring: %s\n", substring);
+		if (fnd) {
+			ulli position = fnd - string;
+			printf("Posiniton of substring: %llu\n", position);
+		} else {
+			printf("Posiniton of substring: -1\n");
+		}
+		free(string);
+		free(substring);
+ 	} else {
 		printf("Invalid flag\n");
 	}
 	return 0;
