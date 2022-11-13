@@ -7,6 +7,25 @@
 #define STR_LIMIT 4096
 
 
+long long int find_substring(char* string, char* substring) {
+	if (strlen(string) < strlen(substring)) {
+		return -1;
+	}
+	for (ulli i = 0; i < strlen(string); i++) {
+		long long int tmp = i;
+		if (string[i] == substring[0]) {
+			for (ulli j = 1; j < strlen(substring); j++) {
+				if (string[i + j] != substring[j]) {
+					return -1;
+				}
+			}
+			return tmp;
+		}
+	}
+	return -1;
+}
+
+
 char* read_string_from_file(FILE *f) {
 	char* ret = (char*) malloc(sizeof(char) * 134217728);
 	char ch;
@@ -63,15 +82,10 @@ int main(int argc, char const *argv[])
 				return 0;
 		}
 		start_calc = clock();
-		char *fnd = strstr(string, substring);
+		long long int position = find_substring(string, substring);
 		end_calc = clock() - start_calc;
 		start_write = clock();
-		if (fnd) {
-			ulli position = fnd - string;
-			fprintf(out_file, "%llu\n", position);
-		} else {
-			fprintf(out_file, "-1\n");
-		}
+		fprintf(out_file, "%lli\n", position);
 		end_write = clock() - start_write;
 		free(string);
 		free(substring);
@@ -99,15 +113,10 @@ int main(int argc, char const *argv[])
 		}
 		char* string = get_rand_string(n1);
 		char* substring = get_rand_string(n2);
-		char *fnd = strstr(string, substring);
+		long long int position = find_substring(string, substring);
 		printf("Generated string: %s\n", string);
 		printf("Generated substring: %s\n", substring);
-		if (fnd) {
-			ulli position = fnd - string;
-			printf("Posiniton of substring: %llu\n", position);
-		} else {
-			printf("Posiniton of substring: -1\n");
-		}
+		printf("Posiniton of substring: %lli\n", position);
 		free(string);
 		free(substring);
  	} else {
